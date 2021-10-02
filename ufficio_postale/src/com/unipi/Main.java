@@ -23,11 +23,11 @@ public class Main {
 
         int servedPeople = 0;
 
-        while (servedPeople < N_PERSONS) {
+        while (servedPeople < N_PERSONS) {  //fai entrare le persone nell ufficio Postale
             Person person = new Person(persons[new Random().nextInt(persons.length)]); //persona con nome random
             sala1.add(person);  // simulo l entrata della persona x all interno delle Poste
 
-            if(queue.size() != K){  //se la coda non è piena
+            if(queue.size() < K){  //se la coda non è piena
                 pool.submit(sala1.poll());  //la persona x si mette in fila nella sala 2
                 servedPeople++;
             }
