@@ -11,7 +11,7 @@ public class Utente extends Thread {
     public Utente(USERS type, Laboratorio lab) {
         this.type = type;
         this.lab = lab;
-        K = 3;
+        K = ThreadLocalRandom.current().nextInt(5);
 
         if (type == USERS.TESISTA)
             i = ThreadLocalRandom.current().nextInt(20);
@@ -22,15 +22,15 @@ public class Utente extends Thread {
         while (K > 0) {
             try {
                 switch (type) {
-                    case PROFESSORE -> lab.occupy("PROFESSORE occupa il Laboratorio -> " + getName());
+                    case PROFESSORE -> lab.occupy("PROFESSORE occupa il Laboratorio -> " + getName() + "| K = "+ K);
 
                     case TESISTA -> {
-                        String msg = "TESISTA sta usando il computer " + i + " -> " + getName();
+                        String msg = "TESISTA sta usando il computer " + i + " -> " + getName() + "| K = "+ K;
                         lab.useComputer(msg, i);
                     }
 
                     case STUDENTE -> {
-                        String msg = "STUDENTE sta usando il Laboratorio -> " + getName();
+                        String msg = "STUDENTE sta usando il Laboratorio -> " + getName() + "| K = "+ K;
                         lab.useComputer(msg);
                     }
                 }
