@@ -42,21 +42,18 @@ public class Main {
 
         for (int i = 0; i < numProfessori; i++) {
             Utente prof = new Utente(USERS.PROFESSORE, lab);
-            prof.setPriority(Thread.MAX_PRIORITY);
 
             utenti.add(prof);
         }
 
         for (int i = 0; i < numTesisti; i++) {
             Utente tesista = new Utente(USERS.TESISTA, lab);
-            tesista.setPriority(Thread.NORM_PRIORITY);
 
             utenti.add(tesista);
         }
 
         for (int i = 0; i < numStudenti; i++) {
             Utente studente = new Utente(USERS.STUDENTE, lab);
-            studente.setPriority(Thread.MIN_PRIORITY);
 
             utenti.add(studente);
         }

@@ -4,20 +4,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Laboratorio {
     private ArrayList<Boolean> computers;   //computers[i] = true -> computer in uso
                                             // computers[i] = false -> computer non in uso
-    private Lock lock;
+    private ReentrantLock lock;
     Condition freeComputer;
+    Condition profCond;
 
     public Laboratorio() {
         computers = new ArrayList<>(Arrays.asList(new Boolean[20]));
         Collections.fill(computers, Boolean.FALSE);
         lock = new ReentrantLock();
         freeComputer = lock.newCondition();
+        profCond = lock.newCondition();
     }
 
     //Il professore attende solo che tutta l aula sia vuota,
@@ -26,7 +27,7 @@ public class Laboratorio {
         try{
             lock.lock();
             while (computers.contains(Boolean.TRUE)){   //controllo che non ci sia nessuno dentro al laboratorio
-                freeComputer.await();
+                profCond.await();
             }
 
             Collections.fill(computers, Boolean.TRUE);  //"uso" tutti i computer
@@ -51,7 +52,12 @@ public class Laboratorio {
     public void useComputer(String msg) throws InterruptedException {
         try {
             lock.lock();
-            while(!computers.contains(Boolean.FALSE)){  // controllo che ci siano computers liberi
+
+            // controllo che ci siano computers liberi
+            while(!computers.contains(Boolean.FALSE) || lock.hasWaiters(profCond)){
+                if(lock.hasWaiters(profCond))
+                    profCond.signal();
+
                 freeComputer.await();
             }
 
@@ -75,8 +81,10 @@ public class Laboratorio {
     public void useComputer(String msg, int i) throws InterruptedException {
         try {
             lock.lock();
+            while(computers.get(i) || lock.hasWaiters(profCond)){
+                if(lock.hasWaiters(profCond))
+                    profCond.signal();
 
-            while (computers.get(i)) {
                 freeComputer.await();
             }
 
