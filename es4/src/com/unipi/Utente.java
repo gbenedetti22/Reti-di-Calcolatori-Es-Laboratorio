@@ -23,15 +23,17 @@ public class Utente extends Thread {
         while (K > 0) {
             try {
                 switch (type) {
-                    case PROFESSORE -> lab.occupy("PROFESSORE occupa il Laboratorio -> " + getName() + "| K = "+ temp);
+                    case PROFESSORE -> {
+                        lab.occupy("PROFESSORE occupa il Laboratorio -> " + getName() + " | K = "+ temp);
+                    }
 
                     case TESISTA -> {
-                        String msg = "TESISTA sta usando il computer " + i + " -> " + getName() + "| K = "+ temp;
+                        String msg = "TESISTA sta usando il computer " + i + " -> " + getName() + " | K = "+ temp;
                         lab.useComputer(msg, i);
                     }
 
                     case STUDENTE -> {
-                        String msg = "STUDENTE sta usando il Laboratorio -> " + getName() + "| K = "+ temp;
+                        String msg = "STUDENTE sta usando il Laboratorio -> " + getName() + " | K = "+ temp;
                         lab.useComputer(msg);
                     }
                 }
