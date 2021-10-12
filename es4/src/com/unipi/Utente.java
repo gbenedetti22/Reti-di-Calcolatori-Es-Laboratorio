@@ -18,7 +18,7 @@ public class Utente extends Thread {
     }
 
     @Override
-    public void run() {
+    public void run() { // -> tutor
         int temp = K;
         while (K > 0) {
             try {

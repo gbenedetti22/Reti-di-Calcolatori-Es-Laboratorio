@@ -1,0 +1,8 @@
+folder1: file2.txt, file3.txt
+folder3: Appunti Algo 18-19.zip, image_2021-09-03_10-11-32.png
+folder2: file4.txt, file5.txt, file6.txt, file7.txt
+folder4: TestSet.zip
+folder5: input0.txt, input1.txt, input2.txt, input3.txt, input4.txt, output0.txt, output1.txt, output2.txt, output3.txt, output4.txt
+folder6: 
+folder7: 
+folder8: 
