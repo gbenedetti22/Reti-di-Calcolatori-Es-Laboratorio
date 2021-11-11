@@ -3,7 +3,9 @@ package com.unipi;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 
 public class PingClient implements Runnable {
     private final int TIMEOUT;
@@ -28,7 +30,8 @@ public class PingClient implements Runnable {
             DatagramSocket socket = new DatagramSocket();
             socket.setSoTimeout(TIMEOUT);
 
-            DatagramPacket receive = new DatagramPacket(new byte[1024], 1024, address, PORT);
+            byte[] buf = new byte[1024];
+            DatagramPacket receive = new DatagramPacket(buf, buf.length, address, PORT);
 
             for (int i = 0; i < 10; i++) {
                 StringBuilder message = new StringBuilder();
@@ -38,8 +41,23 @@ public class PingClient implements Runnable {
                 DatagramPacket packet = new DatagramPacket(message.toString().getBytes(), message.length(), address, PORT);
 
                 socket.send(packet);
+                int seq = -1;
+
+                String response="";
                 try {
-                    socket.receive(receive);
+                    // ciclo finchè non ricevo il pacchetto inviato.
+                    // Se arriva un pacchetto con un seq diverso da quello inviato,
+                    // mi rimetto in ascolto fino allo scadere del timeout
+                    while (seq != i) {
+                        socket.receive(receive);
+                        response = new String(receive.getData(), 0, receive.getLength());
+
+                        seq = Integer.parseInt(response.split(" ")[1]);
+                        Arrays.fill(buf, (byte) 0);
+
+//                        if(seq != i)
+//                            System.out.println("Ricevuto pacchetto ritardatario: " + seq);
+                    }
                 } catch (SocketTimeoutException e) {
                     System.out.println(message + "-> RTT: *");
                     continue;
@@ -48,7 +66,7 @@ public class PingClient implements Runnable {
                 long currentTime = System.currentTimeMillis();
 
                 //dal messaggio: "PING seq timestamp" ottengo il timestamp
-                long packetTime = Long.parseLong(new String(receive.getData(), 0, receive.getLength()).split(" ")[2]);
+                long packetTime = Long.parseLong(response.split(" ")[2]);
 
                 long rtt = currentTime - packetTime;
                 System.out.println(message + "-> RTT: " + rtt + "ms");
@@ -68,13 +86,17 @@ public class PingClient implements Runnable {
         int packetReceived = rtts.size();
         int packetLost = (10 - rtts.size()) * 10;
 
-        long maxRtt = Collections.max(rtts);
-        long minRtt = Collections.min(rtts);
-        double avgRtt = rtts.stream().mapToDouble(e -> e).average().orElse(0.0);
-        String avgStr = String.format("%.2f", avgRtt);
+        try {
+            long maxRtt = Collections.max(rtts);
+            long minRtt = Collections.min(rtts);
+            double avgRtt = rtts.stream().mapToDouble(e -> e).average().orElse(0.0);
+            String avgStr = String.format("%.2f", avgRtt);
 
-        System.out.println("10 packets transmitted, " + packetReceived + " packets received, " + packetLost + "% packet lost");
-        System.out.println("round-trip (ms) min/avg/max = " + minRtt + "/" + avgStr + "/" + maxRtt);
-        System.out.println();
+            System.out.println("10 packets transmitted, " + packetReceived + " packets received, " + packetLost + "% packet lost");
+            System.out.println("round-trip (ms) min/avg/max = " + minRtt + "/" + avgStr + "/" + maxRtt);
+            System.out.println();
+        } catch (NoSuchElementException e) {
+            System.out.println("Nessun pacchetto ricevuto");
+        }
     }
 }

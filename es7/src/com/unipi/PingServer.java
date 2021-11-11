@@ -9,10 +9,10 @@ import java.util.Random;
 public class PingServer implements Runnable {
     private final int PORT;
     private final Random random;
-    private final long DELAY;
+    private final int DELAY;
     DatagramSocket socket;
 
-    public PingServer(int PORT, long delay) {
+    public PingServer(int PORT, int delay) {
         this.PORT = PORT;
         this.DELAY = delay;
         random = new Random();
@@ -34,7 +34,7 @@ public class PingServer implements Runnable {
                 String msg = new String(packet.getData(), 0, packet.getLength());
 
                 if (random.nextInt(4) != 1) {
-                    Thread.sleep(DELAY);
+                    Thread.sleep(random.nextInt(DELAY));
 
                     System.out.println(packet.getAddress().toString() +
                             ":" + packet.getPort() +
