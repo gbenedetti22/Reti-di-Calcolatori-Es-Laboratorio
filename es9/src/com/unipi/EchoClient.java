@@ -50,7 +50,7 @@ public class EchoClient {
         buffer.put(s.getBytes());
         buffer.flip();
 
-        client.write(buffer);
+        while(buffer.hasRemaining()) client.write(buffer);
         buffer.clear();
     }
 }
