@@ -11,13 +11,14 @@ import java.util.Set;
 
 public class EchoServer {
     private static final int PORT = 8080;
+    private static Selector selector;
 
     public static void main(String[] args) throws IOException {
         ServerSocketChannel serverSocket = ServerSocketChannel.open();
         serverSocket.socket().bind(new InetSocketAddress(PORT));
         serverSocket.configureBlocking(false);
 
-        Selector selector = Selector.open();
+        selector = Selector.open();
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         System.out.println("Server Online");
@@ -35,9 +36,13 @@ public class EchoServer {
                     System.out.println("Nuovo client " + newClient.getRemoteAddress().toString());
                 } else if (key.isReadable()) {
                     SocketChannel client = (SocketChannel) key.channel();
-                    serve(client, buffer);
+                    readRequest(client, buffer);
+
                 } else if (key.isWritable()) {
-                    System.out.println("Pippo");
+                    SocketChannel client = (SocketChannel) key.channel();
+                    String request = (String) key.attachment();
+
+                    sendToClient(client, request, buffer);
                 }
 
                 keys.remove(key);
@@ -48,11 +53,11 @@ public class EchoServer {
         serverSocket.close();
     }
 
-    private static void serve(SocketChannel client, ByteBuffer buffer) throws IOException {
+    private static void readRequest(SocketChannel client, ByteBuffer buffer) throws IOException {
         try {
             String request = receiveFromClient(client, buffer);
             if (request == null) return;
-            if (request.equalsIgnoreCase("quit")) {
+            if (request.equals("quit")) {
                 System.out.println(client.getRemoteAddress().toString() + ": disconnesso");
                 client.close();
                 return;
@@ -60,30 +65,39 @@ public class EchoServer {
             System.out.println(request);
 
             request = request.concat(" echoed by Server");
-            sendToClient(client, request, buffer);
+
+            client.register(selector, SelectionKey.OP_WRITE, request);
         } catch (IOException e) {
             System.out.println(client.getRemoteAddress().toString() + ": disconnesso");
             client.close();
         }
-
     }
 
     private static void sendToClient(SocketChannel client, String request, ByteBuffer buffer) throws IOException {
         buffer.clear();
         buffer.put(request.getBytes());
         buffer.flip();
-        client.write(buffer);
+        while(buffer.hasRemaining())
+            client.write(buffer);
+
+        client.register(selector, SelectionKey.OP_READ);
     }
 
     private static String receiveFromClient(SocketChannel client, ByteBuffer buffer) throws IOException {
         buffer.clear();
-        int nBytes = client.read(buffer);
+        int nBytes;
+
+        StringBuilder request = new StringBuilder();
+        while((nBytes = client.read(buffer)) > 0){
+            request.append(new String(buffer.array(), 0, nBytes));
+        }
 
         if (nBytes == -1) {
-            System.out.println("Errore nella lettura del client " + client.getRemoteAddress().toString());
+            System.out.println(client.getRemoteAddress().toString() + ": disconnesso");
             client.close();
             return null;
         }
-        return new String(buffer.array(), 0, nBytes);
+
+        return request.toString();
     }
 }
